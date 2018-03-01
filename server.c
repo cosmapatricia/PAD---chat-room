@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
 #define PORT 8080
@@ -34,7 +35,7 @@ int main(int argc, char const *argv[])
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
-    if (listen(server_fd, 3) < 0)
+    if (listen(server_fd, 5) < 0)
     {
         perror("listen");
         exit(EXIT_FAILURE);
@@ -60,13 +61,15 @@ int main(int argc, char const *argv[])
         close(server_fd);
         /*procesare cerere*/
         valread = read( new_socket , buffer, 1024);
-        printf("%s\n",buffer );
-        send(new_socket , hello , strlen(hello) , 0 );
-        printf("Hello message sent\n");
-
+        printf("%d\n",valread );
+        send(new_socket , (char*)buffer , strlen(buffer) , 0 );
+        printf("Message sent\n");
+  
+        printf("IP address is: %s %s\n",inet_ntoa(address.sin_addr), buffer );
+        close (new_socket);
         exit(0);
     }
     
-        close (new_socket);  /* parinte */
+        //close (new_socket);  /* parinte */
         }
     }
