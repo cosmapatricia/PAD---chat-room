@@ -37,7 +37,7 @@ int main(int argc, char const *argv[])
     }
     while(1)
     {
-	scanf("%s",hello);
+	fgets(hello,100,stdin);
 	hello[strlen(hello)]='\0';
     	send(sock, hello, sizeof(hello), 0);
     	printf("Message sent\n");
