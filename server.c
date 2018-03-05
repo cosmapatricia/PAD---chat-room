@@ -9,7 +9,7 @@
 
 
 typedef struct {
-	char * ip;
+	int socket_fd;
 	char *message;
 	}client;
 	
@@ -21,7 +21,7 @@ int n=0;
 int getClientIndex(client newClient)
 {
 	for (int i=0;i<n;i++){
-		if(strcmp(clients[i].ip,newClient.ip)==0){
+		if(clients[i].socket_fd==newClient.socket_fd){
 			return i;
 		}
 	}
@@ -74,8 +74,10 @@ int main(int argc, char const *argv[])
 	    while((valread = read(new_socket, buffer, 1024))>0)
 	    {
 			client newClient;
-			newClient.ip=inet_ntoa(address.sin_addr);
 			strcpy(newClient.message,buffer);
+                        newClient.socket_fd=new_socket;
+
+                        
 			int pos=getClientIndex(newClient);
 			
 			if(pos==-1)	//the client is new to the server
@@ -87,10 +89,16 @@ int main(int argc, char const *argv[])
 				strcpy(clients[pos].message,newClient.message);
 			}
 			
-			printf("IP address is: %s %s\n",newClient.ip, newClient.message);
+			//n NU SE INCREMENTEAZA
+        
+			printf("Client fd: %d %s\n",newClient.socket_fd, newClient.message);
 			
 			
-			send(new_socket, (char*)buffer, sizeof(buffer), 0);
+			//send(new_socket, (char*)buffer, sizeof(buffer), 0);
+                        printf("n: %d\n",n);
+                        for(int i=0; i<n; i++)
+                            //if(clients[i].socket_fd!=new_socket)
+                                send(clients[i].socket_fd, (char*)buffer, sizeof(buffer), 0);
 			
 	    }
 	    close (new_socket);
