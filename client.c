@@ -38,11 +38,13 @@ int main(int argc, char const *argv[])
     while(1)
     {
 	fgets(hello,100,stdin);
-	hello[strlen(hello)]='\0';
+	hello[strlen(hello)-1]='\0';
     	send(sock, hello, sizeof(hello), 0);
     	printf("Message sent\n");
-    	if((valread = read(sock, buffer, 1024))>0);
-    	    printf("%s received\n",buffer);
+    	if((valread = read(sock, buffer, 1024))>0)
+	{
+    	    printf("\"%s\" received\n",buffer);
+        }
     }
     return 0;
 }
