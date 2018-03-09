@@ -93,17 +93,26 @@ int main(int argc, char const *argv[])
         
 			printf("Client fd: %d %s\n",newClient.socket_fd, newClient.message);
 			
-			
+			/*for(int i=0; i<3; i++)
+                        {
+                            printf("sfd client %d: %d\n", i, clients[i].socket_fd);
+                        }*/
+                        
 			//send(new_socket, (char*)buffer, sizeof(buffer), 0);
                         printf("n: %d\n",n);
                         for(int i=0; i<n; i++)
+                        {
                             //if(clients[i].socket_fd!=new_socket)
+                            
                                 send(clients[i].socket_fd, (char*)buffer, sizeof(buffer), 0);
+                        }
 			
 	    }
+	    
 	    close (new_socket);
 	    exit(0);
         }
+        
         //close (new_socket);  /* parinte */
      }
    
