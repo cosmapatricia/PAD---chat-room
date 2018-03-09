@@ -2,11 +2,11 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
 
-#include<pthread.h> //for threading , link with lpthread
+#include<pthread.h> //for threading, compile with -pthread
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include<pthread.h>
+
 
 void *connection_handler(void *);
 
@@ -107,7 +107,7 @@ void *connection_handler(void *socket_desc)
 {
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
-    int read_size;
+    int read_size, i;
     char client_message[1024];
 
 
@@ -140,7 +140,7 @@ void *connection_handler(void *socket_desc)
                         
 			//send(new_socket, (char*)buffer, sizeof(buffer), 0);
                         printf("n: %d\n",n);
-                        for(int i=0; i<n; i++)
+                        for(i=0; i<n; i++)
                         {
                             //if(clients[i].socket_fd!=new_socket)
                             
@@ -166,6 +166,17 @@ void *connection_handler(void *socket_desc)
     
     pthread_mutex_lock(&mutex);
     threadNumber--;
+    //stergem clientul care s-a deconectat
+    for(i=0; i<n; i++)
+    {
+        if(clients[i].socket_fd==sock)
+            break;
+    }
+    if(i!=n)
+        for(int j=i; j<n-1;j++)
+        {
+            clients[j]=clients[j+1];
+        }
     n--;
     printf("%d clienti conectati \n", n);
     printf("%d fire active \n", threadNumber);
