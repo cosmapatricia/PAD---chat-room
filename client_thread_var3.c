@@ -1,7 +1,7 @@
-#include<stdio.h> //printf
-#include<string.h>    //strlen
-#include<sys/socket.h>    //socket
-#include<arpa/inet.h> //inet_addr
+#include<stdio.h> 
+#include<string.h>    
+#include<sys/socket.h>    
+#include<arpa/inet.h> 
 #include<unistd.h>
 #include<stdlib.h>
 #include<pthread.h> //for threading, compile with -pthread
@@ -15,25 +15,10 @@ typedef struct {
 	char password[1024];
 	} client;
 
-int sock, *new_sock;
-struct sockaddr_in server;
-pthread_t transmit_thread;
-pthread_t receive_thread;
-pthread_attr_t attr;
-
 int main(int argc , char *argv[])
 {
-    if(pthread_attr_init(&attr) !=0)
-    {
-	printf("Error initializing thread");
-	exit(1);
-    }
-    if(pthread_attr_setdetachstate(&attr, 1) !=0)
-    {
-	printf("Error on detaching thread\n");
-	exit(2);
-    }
-
+    int sock, *new_sock;
+    struct sockaddr_in server;
     //Create socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1)
@@ -43,7 +28,7 @@ int main(int argc , char *argv[])
     }
     puts("Socket created\n");
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_addr.s_addr = inet_addr("192.168.43.84");
     server.sin_family = AF_INET;
     server.sin_port = htons(8888);
 
@@ -78,7 +63,7 @@ int main(int argc , char *argv[])
         fgets(username,sizeof(username),stdin);
         strtok(username,"\n");		                             //remove newline from string
 
-	printf("Enter your password:");
+	printf("Enter your password: ");
 	fgets(password,sizeof(password),stdin);
 	strtok(password,"\n");
 
@@ -128,7 +113,7 @@ int main(int argc , char *argv[])
 		exit(10);
 	}
                 
-        while(recv(sock, server_reply, sizeof(client), 0) == -1)
+        while(recv(sock, server_reply, sizeof(client), 0) > 0)
         {
              printf("%s: %s\n", server_reply->username, server_reply->message);
         }      
