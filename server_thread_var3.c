@@ -15,10 +15,10 @@
 void *connection_handler(void *);
 
 typedef struct {
-	int socket_fd;
-	char message[1024];
-	char username[1024];
-	char password[1024];
+        char username[512];
+	char message[512];	
+	char password[512];
+        int socket_fd;
 	}client;
         
 client clients[1000];
@@ -54,7 +54,7 @@ void readUsersFromFile()
 
 void addUserToFile(client * user)
 {
-	FILE * f=fopen("users.txt","w");
+	FILE * f=fopen("users.txt","a");
 	fprintf(f,"\n%s",user->username);
 	fprintf(f,"\n%s",user->password);
    	fclose(f);
@@ -62,10 +62,10 @@ void addUserToFile(client * user)
 
 int main(int argc , char *argv[])
 {
-	readUsersFromFile();
-	client * user=(client *)malloc(sizeof(client));
-	strcpy(user->username,"newUser");
-	strcpy(user->password,"newUserPas");
+	//readUsersFromFile();
+	//client * user=(client *)malloc(sizeof(client));
+	//strcpy(user->username,"newUser");
+	//strcpy(user->password,"newUserPas");
 	//addUserToFile(user);
     int socket_desc , new_socket , c , *new_sock;
     struct sockaddr_in server , client;
@@ -91,10 +91,10 @@ int main(int argc , char *argv[])
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
     {
-        puts("bind failed");
+        puts("Bind failed");
         exit(1);
     }
-    puts("bind done");
+    puts("Bind done");
 
     //Listen
     listen(socket_desc , 3);
@@ -106,7 +106,7 @@ int main(int argc , char *argv[])
     {
          if (new_socket<0)
         {
-            perror("accept failed");
+            perror("Accept failed");
             exit(1);
         }
         puts("Connection accepted");
@@ -116,7 +116,7 @@ int main(int argc , char *argv[])
 
         if( pthread_create( &sniffer_thread , &attr ,  connection_handler , (void*) new_sock) < 0)
         {
-            perror("could not create thread");
+            perror("Could not create thread");
             exit(1);
         }
 
@@ -144,22 +144,24 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size, i;
     //char client_message[1024];
-    client * client_received=(client *)malloc(sizeof(client));
+    client * client_received=(client *)malloc(1540);
+    
+    int count=0;
 
     //Receive a message from client
-    while( (read_size = recv(sock , client_received , sizeof(client) , 0)) > 0 )
+    while( (read_size = recv(sock , client_received , 1024 , 0)) > 0 )
     {
     		
-        printf("client message: %s\n",client_received->message);
         //Send the message back to client
-        //write(sock , client_message , sizeof(client_message));
         
-        client newClient;
         pthread_mutex_lock(&mutex);
+                client newClient;
+                char client_message[1024];
+                char empty_buff[512];
 		strcpy(newClient.message,client_received->message);
 		strcpy(newClient.username,client_received->username);
 		strcpy(newClient.password,client_received->password);
-        newClient.socket_fd=sock;
+                newClient.socket_fd=sock;
 
                         
 			int pos=getClientIndex(newClient);
@@ -173,16 +175,23 @@ void *connection_handler(void *socket_desc)
 				strcpy(clients[pos].message,newClient.message);
 			}
 			
-        
-			printf("Client: %s(fd= %d): %s\n",newClient.username, newClient.socket_fd, newClient.message);
+                        count++;
+			printf("\n%s(fd= %d): %s\n", newClient.username, newClient.socket_fd, newClient.message);
                         
 			//send(new_socket, (char*)buffer, sizeof(buffer), 0);
-                        printf("n: %d\n",n);
+                        //printf("n: %d\n",n);
+                        
+                        strcpy(client_message, client_received->username);
+                        strcat(client_message,": ");
+                        strcat(client_message, client_received->message);
+                        strcat(client_message, empty_buff);
+                    
+                        printf("client password: %s\n",newClient.password);
+                        
+                        
                         for(i=0; i<n; i++)
-                        {
-                            //if(clients[i].socket_fd!=new_socket)
-                            
-                                send(clients[i].socket_fd, client_received, sizeof(client), 0);
+                        {                            
+                                send(clients[i].socket_fd, (char*)client_message, 1538, 0);
                         }
          pthread_mutex_unlock(&mutex);
         

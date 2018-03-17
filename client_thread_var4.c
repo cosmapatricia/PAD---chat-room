@@ -4,16 +4,15 @@
 #include<arpa/inet.h> 
 #include<unistd.h>
 #include<stdlib.h>
-#include<pthread.h> //for threading, compile with -pthread
+#include<pthread.h>        //for threading, compile with -pthread
 #include <sys/types.h>
 #include <sys/wait.h>
 
-typedef struct {
-        char username[512];
-	char message[512];
-	char password[512];
-        int socket_fd;
-	} client;
+void end_transmission(int sign)
+{
+    //printf("End of transmission.\n");
+    exit(0);
+}
 
 int main(int argc , char *argv[])
 {
@@ -24,9 +23,9 @@ int main(int argc , char *argv[])
     if (sock == -1)
     {
         printf("Error creating socket\n");
-	exit(3);
+	exit(1);
     }
-    puts("Socket created\n");
+    //puts("Socket created");
 
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
@@ -36,29 +35,31 @@ int main(int argc , char *argv[])
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) ==-1)
     {
         printf("Error connecting socket\n");
-        exit(4);
+        exit(2);
     }
-    puts("Connected\n");
+    puts("Connected");
 
     pid_t pid_transmit, pid_receive;
     pid_transmit=fork();
     if(pid_transmit == -1)
     {
     	printf("Error creating child process\n");
-        exit(5);
+        exit(3);
     }
-    if(pid_transmit == 0)
+    if(pid_transmit == 0)            
     {
+        struct sigaction act;
+        act.sa_handler=end_transmission;
+        act.sa_flags=0;
+        if(sigaction(SIGUSR1, &act, NULL)<0)
+        {
+            printf("Error setting the handler for SIGUSR1\n");
+            exit(7);
+        }
+        
         char username[512];
-	char password[512];
-        client *newClient=(client *)malloc(sizeof(client));
-	if(newClient==NULL)
-	{
-		printf("Error alocating memory space\n");
-		exit(6);
-	}
-      	newClient->socket_fd=0;   
-
+	char password[512];  
+        
         printf("Enter your username: ");
         fgets(username,sizeof(username),stdin);
         strtok(username,"\n");		                             //remove newline from string
@@ -67,31 +68,29 @@ int main(int argc , char *argv[])
 	fgets(password,sizeof(password),stdin);
 	strtok(password,"\n");
 
-	strcpy(newClient->username,username);   
-        strcpy(newClient->password,password);
                         
-        char message[1024];
-        strcpy(message, strcat(username," has joined the chat room"));        
-        strcpy(newClient->message,message);
+        char message[1025];
+        strcpy(message,username);  
+	strcat(message,":");      
+        strcat(message,password);
 
-        //Send some data
-        if(send(sock, newClient, 1540, 0) == -1)
+        //Send login info
+        if(send(sock, message, 1025, 0) == -1)
         {
               printf("Send failed\n");
-              exit(7);
+              exit(4);
         }
                
-        while(1)
+        while(1) //while(fgets)
         {
-              fgets(message, sizeof(message),stdin);
+              fgets(message,sizeof(message),stdin);
               strtok(message,"\n"); 			
-              strcpy(newClient->message,message);
 
               //Send some data
-              if(send(sock, newClient, 1540, 0) == -1)
+              if(send(sock, message, 1025, 0) == -1)
               {
                    printf("Send failed\n");
-                   exit(8);
+                   exit(5);
               }
         }
         close(sock);
@@ -102,15 +101,25 @@ int main(int argc , char *argv[])
     if(pid_receive == -1)
     {
         printf("Error creating child process\n");
-        exit(9);
+        exit(6);
     }
     if(pid_receive == 0)
     {
-        char server_reply[1540];
-        
+        char server_reply[1025];
                 
-        while(recv(sock, server_reply, 1540, 0) > 0)
+        while(recv(sock, server_reply, 1025, 0) > 0)
         {
+	     if(strcmp(server_reply,"Wrong password!")==0)
+	     {
+                 printf("%s\n", server_reply);
+                 if(kill(pid_transmit, SIGUSR1)<0)
+                 {
+                    printf("Error sending SIGUSR1 to the transmission process\n");
+                    exit(8);
+                 }
+		 close(sock);
+		 exit(0);
+	     }
              printf("%s\n", server_reply);
         }      
         close(sock);                

@@ -120,7 +120,7 @@ int main(int argc , char *argv[])
                 char message[1024];                
                 while(1)
                 {
-                    printf("Enter message: ");
+                    //printf("Enter message: ");
                     fgets(message, sizeof(message),stdin);
                         //Send some data
                     if( send(sock , message , sizeof(message) , 0) < 0)
