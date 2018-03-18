@@ -209,7 +209,7 @@ void *connection_handler(void *socket_desc)
 	strcpy(newClient.password,strtok(NULL,delimiter));
 	newClient.socket_fd=sock;
         
-	strcpy(newClient.message,message);	//message=1025 si newClient->message-512 dar vad ca merge
+	//strcpy(newClient.message,message);	//message=1025 si newClient->message-512 dar vad ca merge
         int status=getClientStatus(newClient);
         //printf("STATUS: %d\n",getClientStatus(newClient));
         if(status==VALID || status==NEW)
